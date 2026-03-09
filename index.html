@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shared Savings Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          boxShadow: {
+            soft: "0 18px 45px rgba(15, 23, 42, 0.14)",
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    .fade-in-up { animation: fadeInUp 300ms ease-out both; }
+    .value-pop { animation: valuePop 350ms ease-out; }
+    .toast-in { animation: toastIn 220ms ease-out both; }
+    .toast-out { animation: toastOut 180ms ease-in both; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes valuePop { 0% { transform: scale(1); } 40% { transform: scale(1.06); } 100% { transform: scale(1); } }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes toastOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-8px); } }
+  </style>
+</head>
+<body class="h-full bg-slate-100 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
+  <div class="min-h-full bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.15),transparent_40%),radial-gradient(circle_at_bottom,_rgba(16,185,129,0.12),transparent_45%)] dark:bg-[radial-gradient(circle_at_top,_rgba(79,70,229,0.28),transparent_40%),radial-gradient(circle_at_bottom,_rgba(16,185,129,0.18),transparent_45%)]">
+    <main class="mx-auto w-full max-w-5xl p-4 sm:p-6">
+      <header class="mb-5 rounded-3xl border border-slate-300/70 bg-white/70 px-5 py-6 shadow-soft backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04]">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 class="flex items-center gap-3 text-2xl font-bold tracking-tight sm:text-3xl">
+              <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-500/30">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18M17 7a4 4 0 0 0-4-2H9a3 3 0 1 0 0 6h6a3 3 0 1 1 0 6H9a4 4 0 0 1-4-2" />
+                </svg>
+              </span>
+              Shared Savings Tracker
+            </h1>
+            <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Track money with friends and decide exactly who can view your financial activity.</p>
+          </div>
+          <button id="themeToggle" type="button" class="rounded-xl border border-slate-300 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 dark:border-white/15 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08]">Light Mode</button>
+        </div>
+      </header>
+
+      <section id="configAlert" class="hidden mb-4 rounded-2xl border border-amber-300/70 bg-amber-100 px-4 py-3 text-sm text-amber-900 dark:border-amber-300/40 dark:bg-amber-400/10 dark:text-amber-100">
+        Add your Supabase config in <code class="rounded bg-black/10 px-1 py-0.5 dark:bg-black/25">app.js</code> first.
+      </section>
+
+      <section id="authCard" class="fade-in-up rounded-3xl border border-slate-300/70 bg-white/70 p-5 shadow-soft backdrop-blur-md dark:border-white/10 dark:bg-white/[0.05] sm:p-6">
+        <div>
+          <h2 id="authTitle" class="text-xl font-semibold">Create Account</h2>
+          <p id="authModeText" class="mt-1 text-sm text-slate-600 dark:text-slate-300">Create an account to get started.</p>
+        </div>
+
+        <form id="authForm" class="mt-5 grid gap-3">
+          <label for="email" class="text-xs uppercase tracking-wide text-slate-600 dark:text-slate-300">Email</label>
+          <input id="email" type="email" required placeholder="you@example.com" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-500 outline-none transition focus:ring-2 focus:ring-indigo-500/60 dark:border-white/10 dark:bg-slate-900/70 dark:text-white dark:placeholder:text-slate-400" />
+
+          <label for="password" class="text-xs uppercase tracking-wide text-slate-600 dark:text-slate-300">Password</label>
+          <div class="relative">
+            <input id="password" type="password" minlength="6" required placeholder="At least 6 characters" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 pr-20 text-sm text-slate-900 placeholder:text-slate-500 outline-none transition focus:ring-2 focus:ring-indigo-500/60 dark:border-white/10 dark:bg-slate-900/70 dark:text-white dark:placeholder:text-slate-400" />
+            <button id="passwordToggle" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg border border-slate-300 bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-100">Show</button>
+          </div>
+
+          <div id="confirmPasswordRow" class="grid gap-2">
+            <label for="confirmPassword" class="text-xs uppercase tracking-wide text-slate-600 dark:text-slate-300">Confirm Password</label>
+            <div class="relative">
+              <input id="confirmPassword" type="password" minlength="6" placeholder="Retype password" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 pr-20 text-sm text-slate-900 placeholder:text-slate-500 outline-none transition focus:ring-2 focus:ring-indigo-500/60 dark:border-white/10 dark:bg-slate-900/70 dark:text-white dark:placeholder:text-slate-400" />
+              <button id="confirmPasswordToggle" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg border border-slate-300 bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-100">Show</button>
+            </div>
+          </div>
+
+          <div id="usernameRow" class="grid gap-2">
+            <label for="username" class="text-xs uppercase tracking-wide text-slate-600 dark:text-slate-300">Username</label>
+            <input id="username" type="text" minlength="3" maxlength="32" placeholder="your_name" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-500 outline-none transition focus:ring-2 focus:ring-indigo-500/60 dark:border-white/10 dark:bg-slate-900/70 dark:text-white dark:placeholder:text-slate-400" />
+          </div>
+
+          <div id="rememberRow" class="flex items-center gap-2">
+            <input id="rememberMe" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-white/20 dark:bg-slate-900" />
+            <label for="rememberMe" class="text-sm text-slate-700 dark:text-slate-200">Remember me on this device</label>
+          </div>
+
+          <button type="submit" id="authSubmitBtn" class="mt-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500">Sign Up</button>
+        </form>
+
+        <button id="authToggleBtn" type="button" class="mt-3 rounded-xl border border-slate-300 bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200 dark:border-white/15 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08]">I already have an account</button>
+      </section>
+
+      <section id="appPanel" class="hidden space-y-4 fade-in-up">
+        <section class="rounded-3xl border border-slate-300/70 bg-white/70 p-4 shadow-soft backdrop-blur-md dark:border-white/10 dark:bg-white/[0.05] sm:p-5">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p class="text-xs uppercase tracking-wide text-slate-600 dark:text-slate-300">Logged in as</p>
+              <h2 id="meLabel" class="text-lg font-semibold">@user</h2>
+            </div>
+            <button id="logoutBtn" type="button" class="rounded-xl border border-slate-300 bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200 dark:border-white/15 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08]">Log Out</button>
+          </div>
+        </section>
+
+        <section class="grid gap-3 sm:grid-cols-3" aria-live="polite">
+          <article class="rounded-2xl border border-emerald-300/80 bg-emerald-100 p-4 dark:border-emerald-300/30 dark:bg-emerald-500/20">
+            <span class="text-xs uppercase tracking-wide text-emerald-800 dark:text-emerald-100">Total Saved</span>
+            <h3 id="totalSaved" class="mt-2 text-2xl font-bold">$0.00</h3>
+          </article>
+          <article class="rounded-2xl border border-orange-300/80 bg-orange-100 p-4 dark:border-orange-300/30 dark:bg-orange-500/20">
+            <span class="text-xs uppercase tracking-wide text-orange-800 dark:text-orange-100">Total Spent</span>
+            <h3 id="totalSpent" class="mt-2 text-2xl font-bold">$0.00</h3>
+          </article>
+          <article class="rounded-2xl border border-indigo-300/80 bg-indigo-100 p-4 dark:border-indigo-300/30 dark:bg-indigo-500/20">
+            <span class="text-xs uppercase tracking-wide text-indigo-800 dark:text-indigo-100">Remaining</span>
+            <h3 id="remainingBudget" class="mt-2 text-2xl font-bold">$0.00</h3>
+          </article>
+        </section>
+
+        <section class="grid gap-4 lg:grid-cols-2">
+          <div class="rounded-3xl border border-slate-300/70 bg-white/70 p-4 shadow-soft backdrop-blur-md dark:border-white/10 dark:bg-white/[0.05]">
+            <h3 class="text-base font-semibold">Add Savings</h3>
+            <form id="savingsForm" class="mt-3 grid gap-2 sm:grid-cols-3">
+              <input id="saveAmount" type="number" min="0.01" step="0.01" placeholder="Amount" required class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-emerald-500/60 dark:border-white/10 dark:bg-slate-900/70 dark:text-white dark:placeholder:text-slate-400" />
+              <input id="saveNote" type="text" maxlength="60" placeholder="Note (optional)" class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-emerald-500/60 dark:border-white/10 dark:bg-slate-900/70 dark:text-white dark:placeholder:text-slate-400" />
+              <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500">Add Savings</button>
+            </form>
+          </div>
+
+          <div class="rounded-3xl border border-slate-300/70 bg-white/70 p-4 shadow-soft backdrop-blur-md dark:border-white/10 dark:bg-white/[0.05]">
+            <h3 class="text-base font-semibold">Record Spending</h3>
+            <form id="spendingForm" class="mt-3 grid gap-2 sm:grid-cols-3">
+              <input id="spendAmount" type="number" min="0.01" step="0.01" placeholder="Amount" required class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-orange-500/60 dark:border-white/10 dark:bg-slate-900/70 dark:text-white dark:placeholder:text-slate-400" />
+              <input id="spendNote" type="text" maxlength="60" placeholder="Note (optional)" class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-orange-500/60 dark:border-white/10 dark:bg-slate-900/70 dark:text-white dark:placeholder:text-slate-400" />
+              <button type="submit" class="rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-500">Add Spending</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="rounded-3xl border border-slate-300/70 bg-white/70 p-4 shadow-soft backdrop-blur-md dark:border-white/10 dark:bg-white/[0.05]">
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h3 class="text-base font-semibold">My Entries</h3>
+            <button id="clearMineBtn" type="button" class="rounded-xl border border-rose-300/70 bg-rose-100 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-200 dark:border-rose-300/40 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20">Delete All Mine</button>
+          </div>
+          <ul id="myHistory" class="mt-3 space-y-2"></ul>
+          <p id="myEmpty" class="mt-3 text-sm text-slate-600 dark:text-slate-300">No entries yet.</p>
+        </section>
+
+        <section class="rounded-3xl border border-slate-300/70 bg-white/70 p-4 shadow-soft backdrop-blur-md dark:border-white/10 dark:bg-white/[0.05]">
+          <h3 class="text-base font-semibold">Find Friends</h3>
+          <form id="searchForm" class="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+            <input id="searchInput" type="text" placeholder="Search by username" required class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-indigo-500/60 dark:border-white/10 dark:bg-slate-900/70 dark:text-white dark:placeholder:text-slate-400" />
+            <button type="submit" class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500">Search</button>
+          </form>
+          <ul id="searchResults" class="mt-3 space-y-2"></ul>
+        </section>
+
+        <section class="rounded-3xl border border-slate-300/70 bg-white/70 p-4 shadow-soft backdrop-blur-md dark:border-white/10 dark:bg-white/[0.05]">
+          <h3 class="text-base font-semibold">Friend Requests</h3>
+          <ul id="incomingRequests" class="mt-3 space-y-2"></ul>
+          <p id="incomingEmpty" class="mt-3 text-sm text-slate-600 dark:text-slate-300">No incoming requests.</p>
+        </section>
+
+        <section class="rounded-3xl border border-slate-300/70 bg-white/70 p-4 shadow-soft backdrop-blur-md dark:border-white/10 dark:bg-white/[0.05]">
+          <h3 class="text-base font-semibold">Friends & Sharing</h3>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Toggle who can view your savings and spending.</p>
+          <ul id="friendsList" class="mt-3 space-y-2"></ul>
+          <p id="friendsEmpty" class="mt-3 text-sm text-slate-600 dark:text-slate-300">No friends yet.</p>
+        </section>
+
+        <section class="rounded-3xl border border-slate-300/70 bg-white/70 p-4 shadow-soft backdrop-blur-md dark:border-white/10 dark:bg-white/[0.05]">
+          <h3 class="text-base font-semibold">Friends Activity (Allowed View Only)</h3>
+          <div id="friendsFeed" class="mt-3 space-y-3"></div>
+          <p id="feedEmpty" class="mt-3 text-sm text-slate-600 dark:text-slate-300">No friend data shared with you yet.</p>
+        </section>
+      </section>
+    </main>
+    <div id="toastContainer" class="pointer-events-none fixed right-4 top-4 z-50 flex w-[min(92vw,360px)] flex-col gap-2"></div>
+  </div>
+
+  <template id="entryTemplate">
+    <li class="entry flex items-start justify-between gap-3 rounded-2xl border border-slate-300 bg-slate-50 p-3 dark:border-white/10 dark:bg-slate-900/45">
+      <div>
+        <p class="entry-amount text-sm font-semibold"></p>
+        <p class="entry-note mt-1 text-xs text-slate-600 dark:text-slate-300"></p>
+      </div>
+      <div class="entry-actions flex flex-col items-end gap-2">
+        <span class="entry-date text-xs text-slate-500 dark:text-slate-400"></span>
+        <button class="delete rounded-lg border border-rose-300/70 bg-rose-100 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-200 dark:border-rose-300/40 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20" type="button">Delete</button>
+      </div>
+    </li>
+  </template>
+
+  <script src="config.js"></script>
+  <script src="/api/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
